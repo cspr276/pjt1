@@ -157,3 +157,5 @@ site/
 # Package files
 *.deb
 *.rpm
+
+analysis/
