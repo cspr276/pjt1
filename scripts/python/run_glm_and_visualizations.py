@@ -261,15 +261,21 @@ def run_first_level_glm(subject_id: str,
 def generate_individual_plots(subject_id: str, 
                                contrast_maps: Dict[str, nib.Nifti1Image]):
     """Generate axial and surface plots for individual subject."""
-    
+    import matplotlib.pyplot as plt
+
     output_dir = ANALYSIS_DIR / 'first_level' / 'individual_plots'
-    
-    for contrast_name, z_map in contrast_maps.items():
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    total_contrasts = len(contrast_maps)
+    logger.info(f"Generating individual plots for {subject_id} ({total_contrasts} contrasts)")
+
+    for idx, (contrast_name, z_map) in enumerate(contrast_maps.items(), start=1):
         try:
+            logger.info(f"  [{subject_id}] Plotting contrast {idx}/{total_contrasts}: {contrast_name}")
+
             # Axial plot
             axial_path = output_dir / f'{subject_id}_{contrast_name}_axial.png'
-            import matplotlib.pyplot as plt
-            fig = plot_stat_map(
+            display = plot_stat_map(
                 z_map,
                 threshold=2.3,
                 display_mode='z',
@@ -277,49 +283,70 @@ def generate_individual_plots(subject_id: str,
                 title=f'{subject_id}: {contrast_name.replace("_", " ").title()}',
                 cmap='hot',
                 black_bg=False,
-                draw_cross=False
+                draw_cross=False,
             )
-            fig.savefig(str(axial_path), dpi=DPI, bbox_inches='tight')
-            plt.close(fig)
+            if display is not None and hasattr(display, 'savefig'):
+                display.savefig(str(axial_path), dpi=DPI, bbox_inches='tight')
+            if display is not None and hasattr(display, 'close'):
+                display.close()
+            if hasattr(display, 'figure') and display.figure is not None:
+                plt.close(display.figure)
+            plt.close('all')
             logger.debug(f"Saved axial plot: {axial_path}")
-            
+
             # Surface plot (left hemisphere)
             fsaverage = datasets.fetch_surf_fsaverage(mesh='fsaverage5')
             texture_left = vol_to_surf(z_map, fsaverage.pial_left)
-            
+
             surface_path_left = output_dir / f'{subject_id}_{contrast_name}_surface_left.png'
-            fig = plot_surf_stat_map(
+            display = plot_surf_stat_map(
                 fsaverage.infl_left,
                 texture_left,
                 hemi='left',
                 view='lateral',
                 threshold=2.3,
                 cmap='hot',
-                title=f'{subject_id}: {contrast_name} (Left)'
+                title=f'{subject_id}: {contrast_name} (Left)',
+                colorbar=False,
             )
-            fig.savefig(str(surface_path_left), dpi=DPI, bbox_inches='tight')
-            plt.close(fig)
+            if display is not None and hasattr(display, 'savefig'):
+                display.savefig(str(surface_path_left), dpi=DPI, bbox_inches='tight')
+            if display is not None and hasattr(display, 'close'):
+                display.close()
+            if hasattr(display, 'figure') and display.figure is not None:
+                plt.close(display.figure)
+            plt.close('all')
             logger.debug(f"Saved surface plot (left): {surface_path_left}")
-            
+
             # Surface plot (right hemisphere)
             texture_right = vol_to_surf(z_map, fsaverage.pial_right)
-            
+
             surface_path_right = output_dir / f'{subject_id}_{contrast_name}_surface_right.png'
-            fig = plot_surf_stat_map(
+            display = plot_surf_stat_map(
                 fsaverage.infl_right,
                 texture_right,
                 hemi='right',
                 view='lateral',
                 threshold=2.3,
                 cmap='hot',
-                title=f'{subject_id}: {contrast_name} (Right)'
+                title=f'{subject_id}: {contrast_name} (Right)',
+                colorbar=False,
             )
-            fig.savefig(str(surface_path_right), dpi=DPI, bbox_inches='tight')
-            plt.close(fig)
+            if display is not None and hasattr(display, 'savefig'):
+                display.savefig(str(surface_path_right), dpi=DPI, bbox_inches='tight')
+            if display is not None and hasattr(display, 'close'):
+                display.close()
+            if hasattr(display, 'figure') and display.figure is not None:
+                plt.close(display.figure)
+            plt.close('all')
             logger.debug(f"Saved surface plot (right): {surface_path_right}")
-            
+
+            logger.info(f"  [{subject_id}] Finished {contrast_name} ({idx}/{total_contrasts})")
+
         except Exception as e:
             logger.warning(f"Failed to generate plots for {subject_id} {contrast_name}: {e}")
+
+    logger.info(f"Completed individual plots for {subject_id}")
 
 
 # ============================================================================
